@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<h1>Update Particulars</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        {% if not is_staff %}
+            <div class="col-nric-name">
+                <div id="col-nric">
+                    <label>NRIC</label>
+                    <input type="text" class="form-control" value="{{ patient.get('NRIC', '') if patient else '' }}" disabled>
+                    <small class="text-muted">Please inform the staff to update personal particulars.</small>
+                </div>
+
+                <div id="col-name">
+                    <label>Name</label>
+                    <input type="text" class="form-control" value="{{ patient.get('PatientName', '') if patient else '' }}" disabled>
+                    <small class="text-muted">Please inform the staff to update personal particulars.</small>
+                </div>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label>Username</label>
+                <input type="text" class="form-control" name="username" value="{{ user.get('Username', '') }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Email</label>
+                <input type="email" class="form-control" name="email" value="{{ user.get('Email', '') }}" required>
+            </div>
+
+            <div class="mb-3 mb-password">
+                <label>Password</label>
+                <input type="password" class="form-control" name="password" placeholder="Leave blank to keep current password">
+            </div>
+    </div>
+
+    <div class="col-md-6">
+        {% if not is_staff %}
+            <div class="mb-3">
+                <label>Date of Birth</label>
+                <input type="date" class="form-control" value="{{ patient.get('PatientDOB', '') if patient else '' }}" disabled>
+                <small class="text-muted">Please inform the staff to update personal particulars.</small>
+            </div>
+
+            <div class="mb-3">
+                <label>Gender</label>
+                <input type="text" class="form-control" value="{{ patient.get('PatientGender', '') if patient else '' }}" disabled>
+                <small class="text-muted">Please inform the staff to update personal particulars.</small>
+            </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label>Address</label>
+            <input type="text" class="form-control" name="address" value="{{ user.get('Address', '') }}">
+        </div>
+
+        <div id="contact" class="mb-3">
+            <label>Contact Number</label>
+            <div class="input-group">
+                <span class="input-group-text">+65</span>
+                <input type="text" class="form-control" name="contact_number" value="{{ user.get('ContactNumber', '') }}">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-buttons">
+    <button type="submit" class="btn btn-primary">Update Account</button>
+</div>
+</form>
+
+<div class="form-buttons mt-3">
+    <form action="{{ url_for('auth.delete_account') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+        <button type="submit" class="btn btn-danger">Delete Account</button>
+    </form>
+</div>
+
+{% endblock %}

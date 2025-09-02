@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="column leftcol"></div>
+    <div class="column rightcol">
+        <h1>Create an Account</h1>
+        <form action="/register" method="post">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="col-md-12 col-nric-name">
+                        <div id="col-nric">
+                            <label for="nric" class="form-label">NRIC</label>
+                            <input type="text" class="form-control" id="nric" name="nric" placeholder="S1234567A" pattern="^[STFGMstfgm]\d{7}[A-Za-z]$" title="NRIC must start with S, T, F, G, or M, followed by 7 digits and a letter." required>
+                        </div>
+                        <div id="col-name">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Jane Smith" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" id="label-username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="janesmith@example.com" required>
+                    </div>
+                    <div class="mb-3 mb-password">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" required>
+                            <i class="fas fa-eye" id="togglePassword" style="cursor: pointer;"></i>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please enter your password.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="dob" class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" id="dob" name="dob" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-select" id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address" name="address"  placeholder="Enter Address" pattern=".*\d{6}.*" title="Address must contain a 6-digit Singapore postal code." required>
+                    </div>
+                    <div id="contact" class="mb-3">
+                        <label for="contact_number" class="form-label">Contact Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+65</span>
+                            <input type="text" class="form-control" id="contact_number" name="contact_number" placeholder="Enter Contact Number" pattern="^[689]\d{7}$" title="Phone number must start with 6, 8, or 9 and contain 8 digits." required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-button">
+                <button type="submit" id="register" class="btn btn-primary">Register</button>
+            </div>
+            <p class="login-hyperlink">Already have an account? <a href="/login">Login</a></p>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 ms = 3 seconds
+
+    // Password Toggle
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+
+    togglePassword.addEventListener('click', function (e) {
+        // Toggle the type attribute
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        // Toggle the icon
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+</script>
+
+{% endblock %}

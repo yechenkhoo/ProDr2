@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <!-- Block for additional styles in child templates -->
+    {% block styles %}
+    {% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <!-- Branding / Logo -->
+        <a class="navbar-brand" href="{% if session['is_staff'] == 1 %}{{ url_for('staff.staff_dashboard') }}{% else %}{{ url_for('patient.patient_dashboard') }}{% endif %}">
+            ProDr Clinic
+        </a>
+
+        <!-- Hamburger menu toggle button for mobile screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar links -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                {% if request.path != '/login' and request.path != '/register' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == url_for('staff.staff_dashboard') or request.path == url_for('patient.patient_dashboard') %}active{% endif %}" href="{% if session['is_staff'] == 1 %}{{ url_for('staff.staff_dashboard') }}{% else %}{{ url_for('patient.patient_dashboard') }}{% endif %}">
+                        Home
+                    </a>                    
+                </li>
+                {% endif %}
+                
+                <!-- Medication List for staff members -->
+                {% if session['is_staff'] == 1 %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == url_for('medication.medications') %}active{% endif %}" href="{{ url_for('medication.medications') }}">
+                        Medication List
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == url_for('staff.manage_appointment') %}active{% endif %}"
+                        href="{{ url_for('staff.manage_appointment') }}">
+                        Appointments List
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if not session['username'] %}
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/update_account' %}active{% endif %}" href="/update_account">Account</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/logout' %}active{% endif %}" href="/logout">Logout</a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <!-- Show username if logged in -->
+            {% if session['username'] %}
+            <span class="navbar-text">Logged in as: {{ session['username'] }}</span>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

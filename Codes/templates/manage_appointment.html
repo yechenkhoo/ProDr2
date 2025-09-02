@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/manage_appointment.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Upcoming Appointment</h1>
+<!-- Display Flash Messages -->
+<a href="{{ url_for('staff.staff_book_appointment') }}"
+    class="btn btn-primary">Add New Appointment</a></td>
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Appointment Table -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Appointment ID</th>
+            <th>Patient ID</th>
+            <th>Appointment Date</th>
+            <th>Appointment Time</th>
+            <th>Appointment Status</th>
+            <th>Appointment Reason</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in appointments %}
+        <tr>
+            <td>{{ appointment.get('_id') }}</td>  <!-- Appointment ID -->
+            <td>{{ appointment.get('patient_id') }}</td>  <!-- Patient ID -->
+            <td>{{ appointment.get('appt_date', 'N/A') }}</td>  <!-- Appointment Date -->
+            <td>{{ appointment.get('appt_time', 'N/A') }}</td>  <!-- Appointment Time -->
+            <td>
+                {% if appointment.get('appt_status') == 'Confirmed' %}
+                    <span class="badge badge-confirm">{{ appointment.get('appt_status') }}</span>
+                {% elif appointment.get('appt_status') == 'Pending' %}
+                    <span class="badge badge-pending">{{ appointment.get('appt_status') }}</span>
+                {% elif appointment.get('appt_status') == 'Cancelled' %}
+                    <span class="badge badge-cancel">{{ appointment.get('appt_status') }}</span>
+                {% else %}
+                    <span class="badge badge-secondary">{{ appointment.get('appt_status', 'N/A') }}</span>
+                {% endif %}
+            </td>
+            <td>{{ appointment.get('appt_reason', 'N/A') }}</td>  <!-- Appointment Reason -->
+            <td>
+                <a href="{{ url_for('staff.view_patient', patient_id=appointment.get('patient_id'), appt_id=appointment.get('_id')) }}" class="btn btn-primary">View Patient</a>
+                <a href="{{ url_for('staff.edit_appointment', patient_id=appointment.get('patient_id'), appt_id=appointment.get('_id')) }}" class="btn btn-primary">Edit Appointment</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 ms = 3 seconds
+</script>
+{% endblock %}

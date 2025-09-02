@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/medications.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="column leftcol">
+        <div class="leftcolbg"></div>
+        <h1>List of Medications</h1>
+
+        <!-- Search Form -->
+        <form id="searchForm" method="GET" action="/medications" class="mb-3" onsubmit="handleSearchSubmit(event)">
+            <div class="input-group" style="position: relative;">
+                <input type="text" id="searchInput" class="form-control" name="search" placeholder="Search by medication name" value="{{ search or '' }}" oninput="fetchSearchResults()">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
+
+        <!-- Search Results Dropdown -->
+        <ul id="searchResults" class="list-group" style="display: none; position: absolute; z-index: 10; width: 100%; max-width: calc(100% - 10px); 
+            left: 0; max-height: 200px; overflow-y: auto; background-color: white; border: 1px solid #ccc;">
+        </ul>
+
+        <!-- Display Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Manage Meds Button -->
+        <button id="manageMedsBtn" class="btn btn-secondary">Manage Quantity</button>
+        
+        <!-- Add/Delete Meds Button -->
+        <button id="addDeleteMedsBtn" class="btn btn-secondary">Add/Delete Meds</button>
+
+        <!-- Medications Table -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Medication ID</th>
+                        <th>Name</th>
+                        <th>Form</th>
+                        <th>Dosage</th>
+                        <th>Quantity</th>
+                        <th>Indication</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for medication in medications %}
+                    <tr>
+                        <td>{{ medication['MedID'] }}</td>
+                        <td>{{ medication['name'] }}</td>
+                        <td>{{ medication['form'] }}</td>
+                        <td>{{ medication['dosage'] }}</td>
+                        <td>{{ medication['quantity'] }}</td>
+                        <td>{{ medication['indication'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if medications|length == 0 %}
+            <p>No medications found.</p>
+        {% endif %}
+
+        {% if search is none and total_pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <!-- Previous button -->
+                <li class="page-item {% if page == 1 %} disabled {% endif %}">
+                    <a class="page-link" href="{{ url_for('medication.medications', page=page-1, search=search) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+        
+                <!-- Page Numbers -->
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %} active {% endif %}">
+                    <a class="page-link" href="{{ url_for('medication.medications', page=p, search=search) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+        
+                <!-- Next button -->
+                <li class="page-item {% if page == total_pages %} disabled {% endif %}">
+                    <a class="page-link" href="{{ url_for('medication.medications', page=page+1, search=search) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+
+    <div class="column rightcol"></div>
+</div>
+
+<!-- Modal for Managing Medication -->
+<div id="manageMedsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Manage Medications</h2>
+        <form method="POST" action="/update_medication_quantity">
+            <div class="form-group">
+                <label for="medicationSelect">Select Medication:</label>
+                <select id="medicationSelect" name="medication_id" class="form-control" onchange="updateCurrentQuantity()">
+                    {% for medication in medications %}
+                    <option value="{{ medication['_id'] }}" data-quantity="{{ medication['quantity'] }}">{{ medication['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="currentQuantity">Current Quantity:</label>
+                <input type="number" id="currentQuantity" class="form-control" value="{% if medications|length > 0 %}{{ medications[0]['quantity'] }}{% else %}0{% endif %}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="quantityChange">Adjust Quantity:</label>
+                <input type="number" id="quantityChange" name="quantity_change" class="form-control" placeholder="Enter quantity to increase/decrease">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Quantity</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Adding/Deleting Medication -->
+<div id="addDeleteMedsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add or Delete Medications</h2>
+        
+        <!-- Form to Add Medication -->
+        <form method="POST" action="/manage_medication">
+            <div class="form-group">
+                <label for="medicationName">Medication Name:</label>
+                <input type="text" id="medicationName" name="name" class="form-control" placeholder="Enter medication name">
+            </div>
+            <div class="form-group">
+                <label for="medicationForm">Form:</label>
+                <input type="text" id="medicationForm" name="form" class="form-control" placeholder="Enter medication form">
+            </div>
+            <div class="form-group">
+                <label for="medicationDosage">Dosage:</label>
+                <input type="text" id="medicationDosage" name="dosage" class="form-control" placeholder="Enter medication dosage">
+            </div>
+            <div class="form-group">
+                <label for="medicationQuantity">Quantity:</label>
+                <input type="number" id="medicationQuantity" name="quantity" class="form-control" placeholder="Enter quantity">
+            </div>
+            <div class="form-group">
+                <label for="medicationIndication">Indication:</label>
+                <input type="text" id="medicationIndication" name="indication" class="form-control" placeholder="Enter indication">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Medication</button>
+        </form>
+
+        <!-- Form to Delete Medication -->
+        <form method="POST" action="/delete_medication" class="mt-3">
+            <div class="form-group">
+                <label for="deleteMedication">Delete Medication:</label>
+                <select id="deleteMedication" name="medication_id" class="form-control">
+                    {% for medication in medications %}
+                    <option value="{{ medication['_id'] }}">{{ medication['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-danger">Delete Medication</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Get modal elements
+    var manageMedsModal = document.getElementById("manageMedsModal");
+    var addDeleteMedsModal = document.getElementById("addDeleteMedsModal");
+    var manageMedsBtn = document.getElementById("manageMedsBtn");
+    var addDeleteMedsBtn = document.getElementById("addDeleteMedsBtn");
+    var spanManageMeds = manageMedsModal.getElementsByClassName("close")[0];
+    var spanAddDeleteMeds = addDeleteMedsModal.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the respective modal
+    manageMedsBtn.onclick = function() {
+        manageMedsModal.style.display = "flex";
+        updateCurrentQuantity();  // Update quantity on modal open
+    }
+
+    addDeleteMedsBtn.onclick = function() {
+        addDeleteMedsModal.style.display = "flex";
+    }
+
+    // When the user clicks on (x), close the modals
+    spanManageMeds.onclick = function() {
+        manageMedsModal.style.display = "none";
+    }
+
+    spanAddDeleteMeds.onclick = function() {
+        addDeleteMedsModal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == manageMedsModal) {
+            manageMedsModal.style.display = "none";
+        } else if (event.target == addDeleteMedsModal) {
+            addDeleteMedsModal.style.display = "none";
+        }
+    }
+
+    // Function to update the current quantity based on selected medication
+    function updateCurrentQuantity() {
+        var selectElement = document.getElementById("medicationSelect");
+        var selectedOption = selectElement.options[selectElement.selectedIndex];
+        var currentQuantity = selectedOption.getAttribute("data-quantity");
+        document.getElementById("currentQuantity").value = currentQuantity;
+    }
+
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 ms = 3 seconds
+
+
+    // This function fetches the name of the medication based on staff input
+    // It displays via a dropdown list
+    function fetchSearchResults() {
+        var query = document.getElementById("searchInput").value;  // Get the search input value
+    var resultsContainer = document.getElementById("searchResults");  // Get the dropdown element
+
+    // Hide the dropdown if input is less than 2 characters (optional)
+    if (query.length < 2) {
+        resultsContainer.style.display = "none";  // Hide the dropdown if query is too short
+        return;
+    }
+
+    // Make AJAX request to fetch search results from the backend
+    fetch(`/search_medications?query=${query}`)
+        .then(response => response.json())  // Parse the JSON response
+        .then(data => {
+            // Clear previous results
+            resultsContainer.innerHTML = '';  
+
+            // If there are results, display them in the dropdown
+            if (data.length > 0) {
+                resultsContainer.style.display = "block";  // Show the dropdown
+                data.forEach(medication => {
+                    // Create a new list item for each medication result
+                    let listItem = document.createElement("li");
+                    listItem.classList.add("list-group-item");
+                    listItem.textContent = medication.name;  // Set the text of the list item to the medication name
+                    listItem.onclick = function() {
+                        // Set the input field to the selected medication name
+                        document.getElementById("searchInput").value = medication.name;
+                        resultsContainer.style.display = "none";  // Hide the dropdown on selection
+                    };
+                    resultsContainer.appendChild(listItem);  // Append the list item to the dropdown
+                });
+            } else {
+                resultsContainer.style.display = "none";  // Hide the dropdown if no results
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching search results:", error);
+        });
+}
+
+function handleSearchSubmit(event) {
+    var searchInput = document.getElementById("searchInput").value.trim();
+    
+    if (!searchInput) {
+        // If the search input is empty, modify the action to submit to "/medications" without query params
+        event.preventDefault();  // Prevent the form from submitting the usual way
+        window.location.href = "/medications";  // Redirect to the clean URL without search query
+    }
+}
+
+</script>
+{% endblock %}

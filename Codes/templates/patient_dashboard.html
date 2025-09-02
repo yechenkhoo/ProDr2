@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient_dashboard.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<h1>Welcome, {{ session['username'] }}!</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="row">        
+    <div class="column leftcol">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Account Details</h4>
+                <a href="{{ url_for('patient.update_account') }}" class="btn">
+                    <i class="fas fa-edit"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <p>Email: {{ user.get('Email', 'N/A') }}</p>
+                <p>Address: {{ user.get('Address', 'N/A') }}</p>
+                <p>Contact Number: {{ user.get('ContactNumber', 'N/A') }}</p>
+            </div>
+        </div>
+
+        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">Book an Appointment</a>
+    </div>
+    <div class="column rightcol">
+        <h4>Appointments</h4>
+        {% if appointments %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Appointment ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments %}
+                    <tr>
+                        <td>{{ appt.get('_id') }}</td>  <!-- Appointment ID -->
+                        <td>{{ appt.get('appt_date').strftime('%Y-%m-%d') }}</td>  <!-- Appointment Date -->
+                        <td>{{ appt.get('appt_time') }}</td>  <!-- Appointment Time -->
+                        <td>
+                            {% if appt.get('appt_status') == 'Confirmed' %}
+                                <span class="badge badge-success">{{ appt.get('appt_status') }}</span>
+                            {% elif appt.get('appt_status') == 'Pending' %}
+                                <span class="badge badge-warning">{{ appt.get('appt_status') }}</span>
+                            {% elif appt.get('appt_status') == 'Cancelled' %}
+                                <span class="badge badge-danger">{{ appt.get('appt_status') }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ appt.get('appt_status') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ appt.get('appt_reason', 'N/A') }}</td>  <!-- Appointment Reason -->
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>You have no appointments booked.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessages = document.querySelectorAll('.alert');
+        flashMessages.forEach(function(flashMessage) {
+            flashMessage.style.display = 'none';
+        });
+    }, 3000);  // 3000 ms = 3 seconds
+</script>
+{% endblock %}

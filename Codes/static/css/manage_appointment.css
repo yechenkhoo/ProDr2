@@ -1,0 +1,17 @@
+.badge-pending {
+    color: yellow; 
+    font-weight: bold; 
+    background-color: #a59c8f;
+}
+
+.badge-confirm {
+    color: rgb(35, 192, 0);
+    font-weight: bold;
+    background-color: #a59c8f;
+}
+
+.badge-cancel {
+    color: rgb(255, 0, 0);
+    font-weight: bold;
+    background-color: #a59c8f;
+}
